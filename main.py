@@ -1,22 +1,19 @@
-from passkey import PassKey
-from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi import FastAPI, HTTPException, Request, Form, Depends, status, Cookie
 from passlib.context import CryptContext
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from crud import CRUD
+from datetime import datetime, timedelta
+from jwt_utils import create_access_token, decode_access_token
 import random
 from typing import Optional
-import uvicorn
+
 
 app = FastAPI()
 db = CRUD()
 templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Configuration
-SECRET_KEY = PassKey.SECRET_KEY 
-ALGORITHM = PassKey.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = PassKey.ACCESS_TOKEN_EXPIRE_MINUTES
 
 # Jinja templates
 def render_templates(name: str, request: Request, **context):
@@ -41,6 +38,23 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
+#--- JWT Dependency ---
+def get_current_user(access_token: str = Cookie(None)):
+    if access_token is None:
+        return None
+    payload = decode_access_token(access_token)
+    if payload is None:
+        return None
+    username = payload.get("sub")
+    if username is None:
+        return None
+    user = db.get_user_by_username(username)
+    if user is None:
+        return None
+    return user
+
+
+
 #--- Routes ---
 # to render login page
 @app.get("/", response_class=HTMLResponse)
@@ -55,7 +69,9 @@ def get_signup(request: Request):
 #--- Logout user ---
 @app.get("/logout")
 async def logout():
-    return RedirectResponse(url="/?msg=You have been logged out successfully", status_code=303)
+    response = RedirectResponse(url="/?msg=You have been logged out successfully", status_code=303)
+    response.delete_cookie("access_token")
+    return response
 
 #--- Login user ---
 @app.post("/login")
@@ -63,7 +79,10 @@ async def login(request: Request, username: str = Form(...), password: str = For
     user = authenticate_user(username, password)
     if not user:
         return templates.TemplateResponse("login.html",{"request": request, "error": "Invalid username or password!"})
-    return templates.TemplateResponse("home.html",{"request": request, "success": "Login successful!"})
+    access_token = create_access_token(data={"sub": user.username})
+    response =  RedirectResponse("/home",status_code=303)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
 
 #--- Signup user ---
 @app.post("/signup")
@@ -79,17 +98,20 @@ async def post_signup(first_name: str = Form(...), last_name: str = Form(...), u
 
 # to render home page with users list
 @app.get("/home", response_class=HTMLResponse)
-async def get_users(request: Request):
-    user = db.get_user_by_id(id)
+async def get_users(request: Request, current_user= Depends(get_current_user)):
+    if current_user is None:
+        return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         users = db.show_all()
-        return render_templates("home.html", request, users=users)
+        return render_templates("home.html", request, users=users, current_user=current_user)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
     
 #--- delete User ---
 @app.get("/delete/{id}")
-async def delete_user(id: int):
+async def delete_user(id: int, current_user= Depends(get_current_user)):
+    if current_user is None:
+        return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         db.delete(id)
         return RedirectResponse(url="/home?msg=User deleted successfully", status_code=303)
@@ -98,7 +120,9 @@ async def delete_user(id: int):
 
 # --- Show Update Form (prefilled) ---
 @app.get("/update/{id}", response_class=HTMLResponse)
-async def get_update_form(request: Request, id: int):
+async def get_update_form(request: Request, id: int, current_user= Depends(get_current_user)):
+    if current_user is None:
+        return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     user = db.get_user_by_id(id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -108,7 +132,10 @@ async def get_update_form(request: Request, id: int):
 @app.post("/update/{id}")
 async def post_update(request: Request,id: int,first_name: str = Form(...),last_name: str = Form(...),
                         username: str = Form(...), email: str = Form(...), mobile: str = Form(...),
-                        password: str = Form(None), security_question: str = Form(None), security_answer: str = Form(None)):
+                        password: str = Form(None), security_question: str = Form(None), security_answer: str = Form(None), 
+                        current_user= Depends(get_current_user)):
+    if current_user is None:
+        return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         # Fetch existing user
         existing_user = db.get_user_by_id(id)
@@ -144,9 +171,12 @@ async def get_add_form(request: Request):
     return render_templates("add.html", request)
 
 @app.post("/add")
-async def add_user(request: Request, first_name: str = Form(...), last_name: str = Form(...),
-        username: str = Form(...), email: str = Form(...), mobile: str = Form(...), password: str = Form(...),
-        security_question: str = Form(...), security_answer: str = Form(...)):
+async def add_user(request: Request, first_name: str = Form(...), last_name: str = Form(...), username: str = Form(...),
+                   email: str = Form(...), mobile: str = Form(...), password: str = Form(...),
+                     security_question: str = Form(...), security_answer: str = Form(...),
+                     current_user= Depends(get_current_user)):
+    if current_user is None:
+        return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         # Check uniqueness
         if db.get_user_by_username(username):
