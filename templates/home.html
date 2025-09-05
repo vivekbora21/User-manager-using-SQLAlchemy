@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% include "messages.html" %}
+{% block title %}Users List{% endblock %}
+{% block content %}
+    <div class="card">
+        <h2>Users List</h2>
+        <a href="/add" class="btn btn-success" style="margin-bottom: 1rem;">
+            <i class="fas fa-plus"></i> Add User
+        </a>
+        {% if user %}
+            <p style="color: #666; margin-top: 0.5rem;">
+                <h4>Welcome, {{ user.first_name }}</h4>
+            </p>
+        {% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial No.</th>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.first_name }}</td>
+                    <td>{{ user.last_name }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.mobile }}</td>
+                    <td>
+                        <a href="/update/{{ user.id }}" class="btn btn-warning" title="Update">
+                            <i class="fas fa-edit"></i> Update
+                        </a>
+                        <a href="/delete/{{ user.id }}" class="btn btn-danger" title="Delete">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% include "messages.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Login</h2>
+    <form method="post" action="/login">
+        <!-- Username -->
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" 
+               placeholder="Enter your username" required>
+
+        <!-- Password -->
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" 
+               placeholder="Enter your password" required>
+
+        <!-- Login button -->
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form><br>
+
+    <!-- Extra links -->
+    <div class="link">
+        <a href="/forgot-password">Forgot Password?</a>
+    </div>
+    <div class="link"><br>
+        Don't have an account? <a href="/signup">Signup</a>
+    </div>
+</div>
+
+{% endblock %}

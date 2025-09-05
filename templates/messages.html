@@ -1,0 +1,13 @@
+<div class="toast-container">
+    {% if success %}
+    <div class="toast alert-success fade-slide">
+        <i class="fas fa-check-circle"></i> {{ success }}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="toast alert-error fade-slide">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    </div>
+    {% endif %}
+</div>

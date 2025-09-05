@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% include "messages.html" %}
+{% block title %}Add User{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Add New User</h2>
+    <form action="/add" method="post">
+        <!-- First Name -->
+        <label for="first_name">First Name</label>
+        <input type="text" name="first_name" id="first_name" 
+               pattern="^[A-Za-z]+$" minlength="2" maxlength="20"
+               title="First name can only contain letters." required>
+
+        <!-- Last Name -->
+        <label for="last_name">Last Name</label>
+        <input type="text" name="last_name" id="last_name" 
+               pattern="^[A-Za-z]+$" minlength="2" maxlength="20"
+               title="Last name can only contain letters." required>
+
+        <!-- Username -->
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" 
+               minlength="5" maxlength="15" pattern="^[a-zA-Z0-9_]+$"
+               title="Username can only contain letters, numbers, and underscores." required>
+
+        <!-- Email -->
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required>
+
+        <!-- Mobile -->
+        <label for="mobile">Mobile Number</label>
+        <input type="tel" name="mobile" id="mobile" 
+               pattern="^[0-9]{10}$" title="Enter a valid 10-digit mobile number." required>
+
+        <!-- Password -->
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" 
+               pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$"
+               title="Password must be 6-20 characters, include letters and numbers." required>
+
+        <!-- Security Question -->
+        <label for="security_question">Security Question</label>
+        <select id="security_question" name="security_question" required>
+            <option value="" disabled selected>Select a security question</option>
+            <option value="pet">What is your first pet's name?</option>
+            <option value="school">What was the name of your first school?</option>
+            <option value="city">In which city were you born?</option>
+        </select>
+
+        <!-- Security Answer -->
+        <label for="security_answer">Your Answer</label>
+        <input type="text" name="security_answer" id="security_answer" required>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Add User
+        </button>
+    </form>
+
+    <br>
+    <a href="/home" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
+{% endblock %}

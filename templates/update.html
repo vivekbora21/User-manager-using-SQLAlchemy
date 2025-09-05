@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% include "messages.html" %}
+{% block title %}Update User{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Update User</h2>
+    <form action="/update/{{ user.id }}" method="post">
+        <!-- Hidden ID (Primary Key) -->
+        <input type="hidden" name="id" value="{{ user.id }}">
+
+        <!-- First Name -->
+        <label for="first_name">First Name</label>
+        <input type="text" name="first_name" id="first_name" 
+               value="{{ user.first_name }}" 
+               pattern="^[A-Za-z]+$" minlength="2" maxlength="20"
+               title="First name can only contain letters." required>
+
+        <!-- Last Name -->
+        <label for="last_name">Last Name</label>
+        <input type="text" name="last_name" id="last_name" 
+               value="{{ user.last_name }}" 
+               pattern="^[A-Za-z]+$" minlength="2" maxlength="20"
+               title="Last name can only contain letters." required>
+
+        <!-- Username -->
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" 
+               value="{{ user.username }}" 
+               minlength="5" maxlength="15" pattern="^[a-zA-Z0-9_]+$"
+               title="Username can only contain letters, numbers, and underscores."
+               required>
+
+        <!-- Email -->
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" 
+               value="{{ user.email }}" required>
+
+        <!-- Mobile -->
+        <label for="mobile">Mobile Number</label>
+        <input type="tel" name="mobile" id="mobile" 
+               value="{{ user.mobile }}" 
+               pattern="^[0-9]{10}$" title="Enter a valid 10-digit mobile number."
+               required>
+
+        <!-- Password -->
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" placeholder="Enter new password (leave blank to keep current)">
+
+
+        <!-- Security Question -->
+        <label for="security_question">Security Question</label>
+        <select id="security_question" name="security_question" required>
+            <option value="" disabled>Select a question</option>
+            <option value="pet" {% if user.security_question == 'pet' %}selected{% endif %}>
+                What is your first pet's name?
+            </option>
+            <option value="school" {% if user.security_question == 'school' %}selected{% endif %}>
+                What was the name of your first school?
+            </option>
+            <option value="city" {% if user.security_question == 'city' %}selected{% endif %}>
+                In which city were you born?
+            </option>
+        </select>
+
+        <!-- Security Answer -->
+        <label for="security_answer">Security Answer</label>
+        <input type="text" name="security_answer" id="security_answer" 
+               value="{{ user.security_answer }}" required>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Update
+        </button>
+    </form>
+
+    <br>
+    <a href="/home" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UserManager API{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Global */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        nav .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+        nav .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        nav a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            flex: 1;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        h1, h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-weight: 300;
+        }
+        h2 {
+            font-size: 28px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        table th, table td {
+            padding: 15px 20px;
+            text-align: left;
+        }
+        table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+        table tr:nth-child(even) {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        table tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transition: background 0.3s ease;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        form label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        form input, form select {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        form input:focus, form select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        form button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        form button:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-2px);
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid #48bb78;
+            color: #2f855a;
+        }
+        .alert-error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            color: #c53030;
+        }
+        /* Fade-out effect */
+        /* Toast container fixed at top-right */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Toast styles */
+        .toast {
+            min-width: 250px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Success & Error colors */
+        .alert-success {
+            background: rgba(72, 187, 120, 0.95);
+            color: #fff;
+        }
+
+        .alert-error {
+            background: rgba(255, 107, 107, 0.95);
+            color: #fff;
+        }
+
+        /* Slide + Fade-out effect */
+        .fade-slide {
+            animation: fadeSlide 3s forwards;
+        }
+
+        @keyframes fadeSlide {
+            0%   { opacity: 1; transform: translateY(0); }
+            70%  { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); visibility: hidden; }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <a href="/" class="logo"><i class="fas fa-graduation-cap"></i> UserManager API</a>
+        <div class="nav-links">
+            {% if request.url.path == '/login' or request.url.path == '/signup' %}
+                <a href="/"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="/signup"><i class="fas fa-user-plus"></i> Sign Up</a>
+            {% else %}
+                <a href="/home"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% include "messages.html" %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
