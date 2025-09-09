@@ -1,13 +1,13 @@
 from database import User, Session
 
 class CRUD:
-    User = User  # Reference to the User model
+    User = User  #Reference to the User model
 
     def __init__(self):
         self.Session = Session
 
     # Add new user
-    def add(self, first_name, last_name, username, email, mobile, password, security_question, security_answer):
+    def add(self, first_name, last_name, username, email, mobile, password, security_question, security_answer,created_at, updated_at, created_by, updated_by):
         with self.Session() as session:
             new_user = self.User(
                 first_name=first_name,
@@ -17,13 +17,17 @@ class CRUD:
                 mobile=mobile,
                 password=password,
                 security_question=security_question,
-                security_answer=security_answer
+                security_answer=security_answer,
+                created_at=created_at,
+                updated_at=updated_at,
+                created_by=created_by,
+                updated_by=updated_by
             )
             session.add(new_user)
             session.commit()
 
     # Update user by id
-    def update(self, id, first_name, last_name, username, email, mobile, password=None, security_question=None, security_answer=None):
+    def update(self, id, first_name, last_name, username, email, mobile, password=None, security_question=None, security_answer=None,updated_at=None, updated_by=None):
         with self.Session() as session:
             user = session.get(self.User, id)
             if user:
@@ -42,6 +46,11 @@ class CRUD:
                     user.security_question = security_question
                 if security_answer:
                     user.security_answer = security_answer
+
+                if updated_at:
+                    user.updated_at = updated_at
+                if updated_by:
+                    user.updated_by = updated_by
 
                 session.commit()
 
@@ -74,9 +83,9 @@ class CRUD:
             return session.query(self.User).filter(self.User.mobile == mobile).first()
 
     # Find by id
-    def get_user_by_id(self, id: int):
+    def get_user_by_id(self, user_id: int):
         with self.Session() as session:
-            return session.get(self.User, id)
+            return session.get(self.User, user_id)
 
     def update_password(self, user_id: int, new_password: str):
         with self.Session() as session:

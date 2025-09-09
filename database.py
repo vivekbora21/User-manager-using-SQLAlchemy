@@ -6,9 +6,6 @@ engine = create_engine("mysql+pymysql://root:1234@localhost/fastapi_users")
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import declarative_base
-
 Base = declarative_base()
 
 class User(Base):
@@ -23,7 +20,13 @@ class User(Base):
     password = Column(String(100))
     security_question = Column(String(100))
     security_answer = Column(String(100))
+    created_at = Column(String(50))
+    updated_at = Column(String(50))
+    created_by = Column(String(50))
+    updated_by = Column(String(50))
     otp = Column(String(6), nullable=True)
+    otp_created_at = Column(String(50), nullable=True)
 
 #Create table if not present
 Base.metadata.create_all(engine) 
+

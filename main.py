@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request, Form, Depends, status, Cook
 from passlib.context import CryptContext
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from crud import CRUD
 from datetime import datetime, timedelta
 from jwt_utils import create_access_token, decode_access_token
@@ -12,6 +13,7 @@ from validation import validate_name, validate_password, validate_mobile, valida
 
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 db = CRUD()
 templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -19,7 +21,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Jinja templates
 def render_templates(name: str, request: Request, **context):
-    return templates.TemplateResponse(name, {"request": request, **context})
+    response = templates.TemplateResponse(name, {"request": request, **context})
+    return response
+
 
 #--- Password Hashing ---
 def get_password_hash(password):
@@ -82,7 +86,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
     if not user:
         return templates.TemplateResponse("login.html",{"request": request, "error": "Invalid username or password!"})
     access_token = create_access_token(data={"sub": user.username})
-    response =  RedirectResponse("/home",status_code=303)
+    response =  RedirectResponse("/home?msg= User loggedin successfully",status_code=303)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     return response
 
@@ -101,7 +105,7 @@ async def post_signup(request: Request, first_name: str = Form(...), last_name: 
         return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
     try:
         hashed_password = get_password_hash(password)
-        db.add(first_name, last_name, username, email, mobile, hashed_password, security_question, security_answer)
+        db.add(first_name, last_name, username, email, mobile, hashed_password, security_question, security_answer, datetime.now().isoformat(),datetime.now().isoformat(), username, username)
         return RedirectResponse(url="/?msg=Signup successful. Please Login", status_code=303)
     except Exception as e:
         return templates.TemplateResponse("signup.html", {"request": Request, "error": str(e)})
@@ -179,7 +183,8 @@ async def post_update(request: Request,id: int,first_name: str = Form(...),last_
 
         # Update user
         db.update(id, first_name, last_name, username, email, mobile,
-                  hashed_password, security_question, security_answer)
+                  hashed_password, security_question, security_answer, 
+                  datetime.now().isoformat(), current_user.username)
         return RedirectResponse(url="/home?msg=User updated succesfully", status_code=303)
 
     except Exception as e:
@@ -218,8 +223,8 @@ async def add_user(request: Request, first_name: str = Form(...), last_name: str
 
         # Hash password and add user
         hashed_password = get_password_hash(password)
-        db.add(first_name, last_name, username, email, mobile,
-               hashed_password, security_question, security_answer)
+        db.add(first_name, last_name, username, email, mobile,hashed_password, security_question, security_answer, 
+               datetime.now().isoformat(),datetime.now().isoformat(), current_user.username, current_user.username)
         return RedirectResponse(url="/home?msg=User added successfully", status_code=303)
 
     except Exception as e:

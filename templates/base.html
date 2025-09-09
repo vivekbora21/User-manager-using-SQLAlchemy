@@ -12,22 +12,36 @@
         }
         body {
             font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
             margin: 0;
             padding: 0;
             color: #333;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="3" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.08)"/></svg>');
+            pointer-events: none;
+            z-index: -1;
         }
         nav {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -35,8 +49,13 @@
         nav .logo {
             font-size: 24px;
             font-weight: bold;
-            color: #667eea;
+            color: #fff;
             text-decoration: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        nav .logo i {
+            color: #ffd700;
+            margin-right: 8px;
         }
         nav .nav-links {
             display: flex;
@@ -185,7 +204,6 @@
             border: 1px solid #ff6b6b;
             color: #c53030;
         }
-        /* Fade-out effect */
         /* Toast container fixed at top-right */
         .toast-container {
             position: fixed;
@@ -238,14 +256,14 @@
 <body>
     <!-- Navbar -->
     <nav>
-        <a class="logo"><i class="fas fa-graduation-cap"></i> UserManager API</a>
+        <a class="logo"href="/home"><i class="fas fa-graduation-cap"></i> UserManager API</a>
         <div class="nav-links">
             {% if request.url.path == '/login' or request.url.path == '/signup' %}
                 <a href="/"><i class="fas fa-sign-in-alt"></i> Login</a>
                 <a href="/signup"><i class="fas fa-user-plus"></i> Sign Up</a>
             {% else %}
                 {% if current_user %}
-                    <span style="color: #333; font-weight: 800; padding: 8px 16px;">Welcome, {{ current_user.first_name}} {{ current_user.last_name }}</span>
+                    <span style="color: #333; font-weight: 800; padding: 8px 16px;">Welcome, {{ current_user.first_name }} {{ current_user.last_name }}</span>
                     <a href="/home"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 {% endif %}
@@ -257,5 +275,32 @@
         {% include "messages.html" %}
         {% block content %}{% endblock %}
     </div>
+    <footer style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7); font-size: 14px; margin-top: auto;">
+        <p>&copy;UserManager API. Built with FastAPI</p>
+    </footer>
+    <script src="/static/js/toast.js"></script>
+    <script>
+        // Add some dynamic effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('card-entrance');
+            });
+        });
+    </script>
+    <style>
+        .card-entrance {
+            animation: cardEntrance 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes cardEntrance {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </body>
 </html>

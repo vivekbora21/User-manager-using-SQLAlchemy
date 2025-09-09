@@ -24,3 +24,4 @@ def decode_access_token(token: str):
         return None
     except jwt.InvalidTokenError:
         return None
+    
