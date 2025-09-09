@@ -8,6 +8,7 @@ from jwt_utils import create_access_token, decode_access_token
 import random
 from typing import Optional
 from smtp_utils import send_email
+from validation import validate_name, validate_password, validate_mobile, validate_username
 
 
 app = FastAPI()
@@ -87,9 +88,17 @@ async def login(request: Request, username: str = Form(...), password: str = For
 
 #--- Signup user ---
 @app.post("/signup")
-async def post_signup(first_name: str = Form(...), last_name: str = Form(...), username: str = Form(...),
+async def post_signup(request: Request, first_name: str = Form(...), last_name: str = Form(...), username: str = Form(...),
                        email: str = Form(...), mobile: str = Form(...),
                       password: str = Form(...), security_question: str = Form(...), security_answer: str = Form(...)):
+    try:
+        first_name = validate_name(first_name)
+        last_name = validate_name(last_name)
+        password = validate_password(password)
+        username = validate_username(username)
+        mobile = validate_mobile(mobile)
+    except HTTPException as e:
+        return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
     try:
         hashed_password = get_password_hash(password)
         db.add(first_name, last_name, username, email, mobile, hashed_password, security_question, security_answer)
@@ -135,8 +144,19 @@ async def post_update(request: Request,id: int,first_name: str = Form(...),last_
                         username: str = Form(...), email: str = Form(...), mobile: str = Form(...),
                         password: str = Form(None), security_question: str = Form(None), security_answer: str = Form(None), 
                         current_user= Depends(get_current_user)):
+    
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
+    try:
+        first_name = validate_name(first_name)
+        last_name = validate_name(last_name)
+        username = validate_username(username)
+        mobile = validate_mobile(mobile)
+        if password:
+            password = validate_password(password)
+    except HTTPException as e:
+        return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
+    
     try:
         # Fetch existing user
         existing_user = db.get_user_by_id(id)
@@ -178,6 +198,15 @@ async def add_user(request: Request, first_name: str = Form(...), last_name: str
                      current_user= Depends(get_current_user)):
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
+    try:
+        first_name = validate_name(first_name)
+        last_name = validate_name(last_name)
+        password = validate_password(password)
+        username = validate_username(username)
+        mobile = validate_mobile(mobile)
+    except HTTPException as e:
+        return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
+    
     try:
         # Check uniqueness
         if db.get_user_by_username(username):

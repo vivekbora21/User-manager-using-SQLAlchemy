@@ -1,0 +1,282 @@
+# User Management System Documentation
+
+## Project Overview
+
+This project is a comprehensive user management system built using FastAPI, a modern, fast web framework for building APIs with Python. The system provides a web-based interface for managing users, including registration, authentication, CRUD operations, and password recovery with OTP verification. It features JWT-based session management, secure password hashing, and email notifications.
+
+The application is designed for scenarios where user management is critical, such as internal admin panels, customer portals, or any system requiring user accounts with secure access controls.
+
+## Architecture and Technology Stack
+
+### Backend
+- **FastAPI**: High-performance web framework for building APIs.
+- **SQLAlchemy**: ORM for database interactions.
+- **MySQL**: Relational database for data persistence.
+- **JWT (JSON Web Tokens)**: For stateless authentication.
+- **bcrypt**: For secure password hashing.
+- **SMTP**: For email sending (Gmail integration).
+
+### Frontend
+- **Jinja2 Templates**: Server-side templating for HTML rendering.
+- **HTML/CSS**: Responsive web interface with modern styling.
+- **Font Awesome**: Icons for enhanced UI.
+
+### Key Components
+- **main.py**: Main application file with all routes and logic.
+- **crud.py**: Database CRUD operations.
+- **database.py**: Database models and connection setup.
+- **jwt_utils.py**: JWT token handling.
+- **smtp_utils.py**: Email utilities.
+- **passkey.py**: Configuration constants.
+- **templates/**: HTML templates for UI.
+
+## Features
+
+### Core Features
+1. **User Registration**: New users can sign up with personal details, username, email, mobile, and security questions.
+2. **User Authentication**: Secure login with username/password, JWT-based sessions.
+3. **User Management**: Admin-like interface to view, add, update, and delete users.
+4. **Password Reset**: Forgot password functionality with OTP verification via email.
+5. **Session Management**: Automatic logout on session expiry, secure cookie-based tokens.
+6. **Security Questions**: Additional security layer for password recovery.
+
+### Additional Features
+- Responsive web UI with modern design.
+- Real-time notifications and error handling.
+- Data validation and uniqueness checks.
+- Secure password storage with hashing.
+- Email notifications for OTP.
+
+## File Structure
+
+```
+project_root/
+├── main.py                 # Main FastAPI application
+├── crud.py                 # CRUD operations for users
+├── database.py             # Database models and connection
+├── jwt_utils.py            # JWT token utilities
+├── smtp_utils.py           # Email sending utilities
+├── passkey.py              # Configuration constants
+├── templates/              # HTML templates
+│   ├── base.html           # Base template with navigation
+│   ├── login.html          # Login page
+│   ├── signup.html         # Registration page
+│   ├── home.html           # Dashboard with user list
+│   ├── add.html            # Add new user form
+│   ├── update.html         # Update user form
+│   ├── forgot_password.html # Forgot password page
+│   ├── verify_otp.html     # OTP verification page
+│   ├── reset_password.html # Password reset page
+│   └── messages.html       # Notification messages
+├── .gitignore              # Git ignore file
+└── project_documentation.txt # This documentation file
+```
+
+## Database Schema
+
+The system uses a single `users` table in MySQL with the following schema:
+
+```sql
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    mobile VARCHAR(15) UNIQUE,
+    password VARCHAR(100),
+    security_question VARCHAR(100),
+    security_answer VARCHAR(100),
+    otp VARCHAR(6) NULL
+);
+```
+
+### Field Descriptions
+- **id**: Auto-incrementing primary key.
+- **first_name/last_name**: User's full name.
+- **username**: Unique username for login.
+- **email**: Unique email address.
+- **mobile**: Unique mobile number.
+- **password**: Hashed password using bcrypt.
+- **security_question/answer**: For password recovery.
+- **otp**: Temporary OTP for password reset (nullable).
+
+## API Endpoints
+
+### Authentication Endpoints
+- `GET /`: Login page
+- `GET /signup`: Signup page
+- `POST /login`: User login
+- `GET /logout`: User logout
+- `POST /signup`: User registration
+
+### User Management Endpoints
+- `GET /home`: Dashboard with user list (authenticated)
+- `GET /add`: Add user form (authenticated)
+- `POST /add`: Add new user (authenticated)
+- `GET /update/{id}`: Update user form (authenticated)
+- `POST /update/{id}`: Update user (authenticated)
+- `GET /delete/{id}`: Delete user (authenticated)
+
+### Password Recovery Endpoints
+- `GET /forgot-password`: Forgot password page
+- `POST /forgot-password`: Initiate password reset
+- `GET /verify-otp`: OTP verification page
+- `POST /verify-otp`: Verify OTP
+- `POST /reset-password`: Reset password
+
+## Authentication and Security
+
+### JWT Authentication
+- Tokens are stored in HTTP-only cookies for security.
+- Default token expiry: 30 minutes.
+- Automatic token validation on protected routes.
+
+### Password Security
+- Passwords are hashed using bcrypt before storage.
+- Support for both bcrypt and plain text (for migration).
+- Minimum security requirements enforced.
+
+### Session Management
+- Users must be authenticated for protected routes.
+- Automatic redirect to login on unauthorized access.
+- Secure logout clears session cookies.
+
+## Password Reset Flow
+
+1. User clicks "Forgot Password" and selects recovery method (email or mobile).
+2. System verifies user existence and security question/answer.
+3. Generates 6-digit OTP and stores temporarily in database.
+4. Sends OTP via email using SMTP.
+5. User enters OTP on verification page.
+6. If OTP matches, user can reset password.
+7. New password is hashed and stored, OTP is cleared.
+
+## Dependencies and Requirements
+
+### Python Packages
+- fastapi
+- uvicorn (for running the server)
+- sqlalchemy
+- pymysql (MySQL connector)
+- passlib (for bcrypt)
+- python-jose (for JWT)
+- python-multipart (for form data)
+- jinja2 (for templates)
+- python-dotenv (optional, for environment variables)
+
+### System Requirements
+- Python 3.8+
+- MySQL Server
+- Internet connection (for email sending)
+
+### Environment Variables (Optional)
+- SENDER_EMAIL: Gmail address for sending emails
+- EMAIL_PASSWORD: Gmail app password
+
+## Setup and Installation Instructions
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd <project-directory>
+```
+
+### 2. Install Dependencies
+```bash
+pip install fastapi uvicorn sqlalchemy pymysql passlib python-jose python-multipart jinja2
+```
+
+### 3. Set Up MySQL Database
+- Create a MySQL database named `fastapi_users`
+- Update database credentials in `database.py` if needed
+- The application will automatically create the `users` table on first run
+
+### 4. Configure Email (Optional)
+- Set environment variables for Gmail:
+  ```bash
+  export SENDER_EMAIL="your-email@gmail.com"
+  export EMAIL_PASSWORD="your-app-password"
+  ```
+- Or update `passkey.py` directly
+
+### 5. Run the Application
+```bash
+uvicorn main:app --reload
+```
+
+### 6. Access the Application
+- Open browser to `http://localhost:8000`
+- Register a new user or login with existing credentials
+
+## Usage Guide
+
+### For New Users
+1. Visit the homepage and click "Sign Up"
+2. Fill in all required fields including security question
+3. Submit the form to create your account
+4. Login with your username and password
+
+### For Existing Users
+1. Login with your credentials
+2. Access the dashboard to view all users
+3. Use "Add User" to create new accounts
+4. Click "Update" or "Delete" to modify existing users
+
+### Password Recovery
+1. Click "Forgot Password" on login page
+2. Select recovery method (email)
+3. Answer security question
+4. Check email for OTP
+5. Enter OTP and set new password
+
+## Configuration
+
+### JWT Settings (in passkey.py)
+- SECRET_KEY: Change to a secure random string in production
+- ALGORITHM: HS256 (recommended)
+- ACCESS_TOKEN_EXPIRE_MINUTES: 30 (adjust as needed)
+
+### Database Settings (in database.py)
+- Update connection string for different databases or credentials
+- Example: `"mysql+pymysql://user:password@host/dbname"`
+
+### Email Settings
+- Use app passwords for Gmail instead of regular passwords
+- Enable 2FA on Gmail account for security
+
+## Security Considerations
+
+1. **Environment Variables**: Store sensitive data in environment variables, not in code.
+2. **HTTPS**: Use HTTPS in production to secure cookie transmission.
+3. **Password Policies**: Implement stronger password requirements.
+4. **Rate Limiting**: Add rate limiting to prevent brute force attacks.
+5. **Input Validation**: All user inputs are validated, but additional sanitization may be needed.
+6. **Database Security**: Use parameterized queries (already implemented with SQLAlchemy).
+7. **Session Security**: Short token expiry and secure cookie settings.
+
+## Troubleshooting
+
+### Common Issues
+1. **Database Connection Error**: Check MySQL server is running and credentials are correct.
+2. **Email Not Sending**: Verify Gmail credentials and app password setup.
+3. **Template Errors**: Ensure all template files are in the `templates/` directory.
+4. **Import Errors**: Install all required Python packages.
+
+### Logs
+- Check console output for error messages.
+- Email sending logs are available in the console.
+
+## Future Enhancements
+
+1. **Role-Based Access Control**: Implement user roles and permissions.
+2. **API Documentation**: Add Swagger/OpenAPI documentation.
+3. **Pagination**: For large user lists.
+4. **Profile Pictures**: User avatar upload functionality.
+5. **Two-Factor Authentication**: Additional security layer.
+6. **Audit Logs**: Track user actions and changes.
+7. **REST API**: Expose endpoints for external integrations.
+
+---
+
+This documentation provides a complete overview of the User Management System. For any questions or issues, refer to the code comments or contact the development team.

@@ -3,10 +3,12 @@
 {% block title %}Users List{% endblock %}
 {% block content %}
     <div class="card">
-        <h2>Users List</h2>
-        <a href="/add" class="btn btn-success" style="margin-bottom: 1rem;">
-            <i class="fas fa-plus"></i> Add User
-        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Users List</h2>
+            <a href="/add" class="btn btn-success">
+                <i class="fas fa-user-plus"></i> Add User
+            </a>
+        </div>
         <table>
             <thead>
                 <tr>
