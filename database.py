@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import create_engine, Column, String, Integer, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 #Database connection
@@ -25,7 +25,7 @@ class User(Base):
     created_by = Column(String(50))
     updated_by = Column(String(50))
     otp = Column(String(6), nullable=True)
-    otp_created_at = Column(String(50), nullable=True)
+    otp_expiry = Column(DateTime, nullable=True)
 
 #Create table if not present
 Base.metadata.create_all(engine) 

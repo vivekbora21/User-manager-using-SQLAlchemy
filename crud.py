@@ -96,11 +96,12 @@ class CRUD:
                 return True
             return False
     
-    def update_otp(self, user_id: int, otp: str):
+    def update_otp(self, user_id: int, otp: str, otp_expiry=None):
         with self.Session() as session:
             user = session.get(self.User, user_id)
             if user:
                 user.otp = otp
+                user.otp_expiry = otp_expiry
                 session.commit()
                 return True
             return False

@@ -259,7 +259,8 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
 
     # Generate OTP
     otp = str(random.randint(100000, 999999))
-    db.update_otp(user.id, otp)
+    otp_expiry = datetime.utcnow() + timedelta(minutes=3)  # OTP valid for 3 minutes
+    db.update_otp(user.id, otp, otp_expiry)
     subject = "Your OTP for Password Reset"
     body = f"Your OTP is: {otp}"
     if not send_email(user.email, subject, body):
@@ -283,7 +284,7 @@ async def reset_password(request: Request, option: str = Form(...), identifier: 
         user = db.get_user_by_mobile(identifier.strip())
 
     if not user:
-        return templates.TemplateResponse("reset_password.html", {"request": request, "error": "User not found", "option": option, "identifier": identifier}
+        return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "User not found", "option": option, "identifier": identifier}
         )
 
     # Update only password
@@ -314,8 +315,12 @@ async def verify_otp(request: Request, option: Optional[str] = Form(None), ident
         # OTP invalid, stay on the same page with error
         return templates.TemplateResponse("verify_otp.html", {"request": request, "option": option, "identifier": identifier, "error": "Invalid OTP"})
 
+    if datetime.utcnow() > user.otp_expiry:
+        db.update_otp(user.id, None, None)
+        return templates.TemplateResponse("forgot_password.html", {"request": request, "option": option, "identifier": identifier, "error": "OTP has expired"})
+    
     # OTP matched, clear it
-    db.update_otp(user.id, None)
+    db.update_otp(user.id, None, None)
 
     # Redirect to login page with optional message
     return templates.TemplateResponse("reset_password.html",{
