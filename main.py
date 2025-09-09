@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from crud import CRUD
 from datetime import datetime, timedelta
-from jwt_utils import create_access_token, decode_access_token
+from jwt_utils import create_access_token, decode_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 import random
 from typing import Optional
 from smtp_utils import send_email
@@ -87,7 +87,9 @@ async def login(request: Request, username: str = Form(...), password: str = For
         return templates.TemplateResponse("login.html",{"request": request, "error": "Invalid username or password!"})
     access_token = create_access_token(data={"sub": user.username})
     response =  RedirectResponse("/home?msg= User loggedin successfully",status_code=303)
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True,
+                        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     return response
 
 #--- Signup user ---
@@ -268,9 +270,8 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
 @app.post("/reset-password")
 async def reset_password(request: Request, option: str = Form(...), identifier: str = Form(...), new_password: str = Form(...), confirm_password: str = Form(...)):
     if new_password != confirm_password:
-        return templates.TemplateResponse(
-            "reset_password.html",
-            {"request": request, "error": "Passwords do not match", "option": option, "identifier": identifier}
+        return templates.TemplateResponse("reset_password.html",{
+            "request": request, "error": "Passwords do not match", "option": option, "identifier": identifier}
         )
     hashed_password = get_password_hash(new_password)
 
@@ -317,7 +318,6 @@ async def verify_otp(request: Request, option: Optional[str] = Form(None), ident
     db.update_otp(user.id, None)
 
     # Redirect to login page with optional message
-    return templates.TemplateResponse(
-        "reset_password.html",
-        {"request": request, "option": option, "identifier": identifier}
+    return templates.TemplateResponse("reset_password.html",{
+        "request": request, "option": option, "identifier": identifier}
     )
