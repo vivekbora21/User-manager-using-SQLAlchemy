@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from jwt_utils import create_access_token, decode_access_token
 import random
 from typing import Optional
+from smtp_utils import send_email
 
 
 app = FastAPI()
@@ -222,12 +223,11 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
 
     # Generate OTP
     otp = str(random.randint(100000, 999999))
-
-    # Store OTP temporarily
     db.update_otp(user.id, otp)
-
-    # send OTP via email/SMS
-    print(f"OTP for {identifier}: {otp}", flush=True)  # just printing for now
+    subject = "Your OTP for Password Reset"
+    body = f"Your OTP is: {otp}"
+    if not send_email(user.email, subject, body):
+        return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Failed to send OTP email"})
 
     return templates.TemplateResponse("verify_otp.html", {"request": request, "option": option, "identifier": identifier})
 
