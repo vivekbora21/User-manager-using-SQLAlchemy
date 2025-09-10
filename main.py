@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from crud import CRUD
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from jwt_utils import create_access_token, decode_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 import random
 from typing import Optional
@@ -17,7 +17,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 db = CRUD()
 templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-IST = timezone(timedelta(hours=5, minutes=30))
 
 
 # Jinja templates
@@ -60,6 +59,11 @@ def get_current_user(access_token: str = Cookie(None)):
         return None
     return user
 
+#--- for sending otp via email ---
+def generate_otp_email(otp: str, expiry: int = 3) -> str:
+        template = templates.get_template("email_otp.html")
+        return template.render(otp=otp, expiry=expiry)
+
 #--- Routes ---
 # to render login page
 @app.get("/", response_class=HTMLResponse)
@@ -85,7 +89,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
     if not user:
         return templates.TemplateResponse("login.html",{"request": request, "error": "Invalid username or password!"})
     access_token = create_access_token(data={"sub": user.username})
-    response =  RedirectResponse("/home?msg= User loggedin successfully",status_code=303)
+    response =  RedirectResponse("/home?msg= User login successful",status_code=303)
     response.set_cookie(key="access_token", value=access_token, httponly=True,
                         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                         expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
@@ -109,7 +113,7 @@ async def post_signup(request: Request, first_name: str = Form(...), last_name: 
         db.add(first_name, last_name, username, email, mobile, hashed_password, security_question, security_answer, datetime.now().isoformat(),datetime.now().isoformat(), username, username)
         return RedirectResponse(url="/?msg=Signup successful. Please Login", status_code=303)
     except Exception as e:
-        return templates.TemplateResponse("signup.html", {"request": Request, "error": str(e)})
+        return templates.TemplateResponse("signup.html", {"request": request, "error": str(e)})
 
 # to render home page with users list
 @app.get("/home", response_class=HTMLResponse)
@@ -160,7 +164,7 @@ async def post_update(request: Request,id: int,first_name: str = Form(...),last_
         if password:
             password = validate_password(password)
     except HTTPException as e:
-        return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
+        return templates.TemplateResponse("update.html", {"request": request, "error": e.detail})
     
     try:
         # Fetch existing user
@@ -255,17 +259,13 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
 
     if user.security_question != security_question or user.security_answer != security_answer:
         return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Security check failed"})
-
-    def generate_otp_email(otp: str, expiry: int = 3) -> str:
-        template = templates.get_template("email_otp.html")
-        return template.render(otp=otp, expiry=expiry)
     
     # Generate OTP
     otp = str(random.randint(100000, 999999))
-    otp_expiry = datetime.now(IST) + timedelta(minutes=3) # OTP valid for 3 minutes
+    otp_expiry = datetime.utcnow() + timedelta(minutes=3) # OTP valid for 3 minutes
     db.update_otp(user.id, otp, otp_expiry)
     subject = "Your OTP for Password Reset"
-    body = generate_otp_email(otp,otp_expiry)
+    body = generate_otp_email(otp) #you otp is {otp} and valid for 3 minutes
     if not send_email(user.email, subject, body):
         return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Failed to send OTP email"})
 
@@ -327,5 +327,5 @@ async def verify_otp(request: Request, option: Optional[str] = Form(None), ident
 
     # Redirect to login page with optional message
     return templates.TemplateResponse("reset_password.html",{
-        "request": request, "option": option, "identifier": identifier}
+        "request": request, "option": option, "identifier": identifier, "username": user.username}
     )
