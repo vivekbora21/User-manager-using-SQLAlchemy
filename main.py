@@ -9,7 +9,7 @@ from jwt_utils import create_access_token, decode_access_token, ACCESS_TOKEN_EXP
 import random
 from typing import Optional
 from smtp_utils import send_email
-from validation import validate_name, validate_password, validate_mobile, validate_username
+from validation import validate_name, validate_password, validate_mobile, validate_username, validate_email
 
 
 app = FastAPI()
@@ -105,6 +105,7 @@ async def post_signup(request: Request, first_name: str = Form(...), last_name: 
         last_name = validate_name(last_name)
         password = validate_password(password)
         username = validate_username(username)
+        email = validate_email(email)
         mobile = validate_mobile(mobile)
     except HTTPException as e:
         return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})
@@ -160,6 +161,7 @@ async def post_update(request: Request,id: int,first_name: str = Form(...),last_
         first_name = validate_name(first_name)
         last_name = validate_name(last_name)
         username = validate_username(username)
+        email = validate_email(email)
         mobile = validate_mobile(mobile)
         if password:
             password = validate_password(password)
@@ -213,6 +215,7 @@ async def add_user(request: Request, first_name: str = Form(...), last_name: str
         last_name = validate_name(last_name)
         password = validate_password(password)
         username = validate_username(username)
+        email = validate_email(email)
         mobile = validate_mobile(mobile)
     except HTTPException as e:
         return templates.TemplateResponse("signup.html", {"request": request, "error": e.detail})

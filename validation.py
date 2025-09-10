@@ -26,3 +26,8 @@ def validate_username(username: str) -> bool:
     if not re.match(r"^[A-Za-z0-9_]+$", username):
         raise HTTPException(status_code=400, detail="Username can only contain letters, numbers, and underscores.")
     return username
+
+def validate_email(email: str) -> bool:
+    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+        raise HTTPException(status_code=400, detail="Invalid email format.")
+    return email
