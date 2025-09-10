@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from crud import CRUD
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jwt_utils import create_access_token, decode_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 import random
 from typing import Optional
@@ -17,6 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 db = CRUD()
 templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+IST = timezone(timedelta(hours=5, minutes=30))
 
 
 # Jinja templates
@@ -58,8 +59,6 @@ def get_current_user(access_token: str = Cookie(None)):
     if user is None:
         return None
     return user
-
-
 
 #--- Routes ---
 # to render login page
@@ -257,12 +256,16 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
     if user.security_question != security_question or user.security_answer != security_answer:
         return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Security check failed"})
 
+    def generate_otp_email(otp: str, expiry: int = 3) -> str:
+        template = templates.get_template("email_otp.html")
+        return template.render(otp=otp, expiry=expiry)
+    
     # Generate OTP
     otp = str(random.randint(100000, 999999))
-    otp_expiry = datetime.utcnow() + timedelta(minutes=3)  # OTP valid for 3 minutes
+    otp_expiry = datetime.now(IST) + timedelta(minutes=3) # OTP valid for 3 minutes
     db.update_otp(user.id, otp, otp_expiry)
     subject = "Your OTP for Password Reset"
-    body = f"Your OTP is: {otp}"
+    body = generate_otp_email(otp,otp_expiry)
     if not send_email(user.email, subject, body):
         return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Failed to send OTP email"})
 
