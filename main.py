@@ -67,12 +67,16 @@ def generate_otp_email(otp: str, expiry: int = 3) -> str:
 #--- Routes ---
 # to render login page
 @app.get("/", response_class=HTMLResponse)
-def get_login(request: Request):
+def get_login(request: Request,current_user= Depends(get_current_user)):
+    if current_user:
+        return RedirectResponse(url="/home?msg=You are already logged in", status_code=303)
     return render_templates("login.html", request)
 
 # to render signup page
 @app.get("/signup", response_class=HTMLResponse)
-def get_signup(request: Request):
+def get_signup(request: Request,current_user= Depends(get_current_user)):
+    if current_user:
+        return RedirectResponse(url="/home?msg=You are already logged in", status_code=303)
     return render_templates("signup.html", request)
 
 #--- Logout user ---
@@ -98,8 +102,8 @@ async def login(request: Request, username: str = Form(...), password: str = For
 #--- Signup user ---
 @app.post("/signup")
 async def post_signup(request: Request, first_name: str = Form(...), last_name: str = Form(...), username: str = Form(...),
-                       email: str = Form(...), mobile: str = Form(...),
-                      password: str = Form(...), security_question: str = Form(...), security_answer: str = Form(...)):
+                       email: str = Form(...), mobile: str = Form(...),password: str = Form(...), security_question: str = Form(...), 
+                       security_answer: str = Form(...)):
     try:
         first_name = validate_name(first_name)
         last_name = validate_name(last_name)
@@ -128,13 +132,13 @@ async def get_users(request: Request, current_user= Depends(get_current_user)):
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
     
 #--- delete User ---
-@app.get("/delete/{id}")
-async def delete_user(id: int, current_user= Depends(get_current_user)):
+@app.delete("/delete/{id}")
+async def delete_user(id: int, current_user=Depends(get_current_user)):
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         db.delete(id)
-        return RedirectResponse(url="/home?msg=User deleted successfully", status_code=303)
+        return {"msg": "User deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
 
@@ -188,8 +192,7 @@ async def post_update(request: Request,id: int,first_name: str = Form(...),last_
         hashed_password = get_password_hash(password) if password else None
 
         # Update user
-        db.update(id, first_name, last_name, username, email, mobile,
-                  hashed_password, security_question, security_answer, 
+        db.update(id, first_name, last_name, username, email, mobile,hashed_password, security_question, security_answer, 
                   datetime.now().isoformat(), current_user.username)
         return RedirectResponse(url="/home?msg=User updated succesfully", status_code=303)
 
@@ -204,9 +207,8 @@ async def get_add_form(request: Request):
 
 @app.post("/add")
 async def add_user(request: Request, first_name: str = Form(...), last_name: str = Form(...), username: str = Form(...),
-                   email: str = Form(...), mobile: str = Form(...), password: str = Form(...),
-                     security_question: str = Form(...), security_answer: str = Form(...),
-                     current_user= Depends(get_current_user)):
+                   email: str = Form(...), mobile: str = Form(...), password: str = Form(...),security_question: str = Form(...), 
+                   security_answer: str = Form(...), current_user= Depends(get_current_user)):
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
@@ -239,7 +241,9 @@ async def add_user(request: Request, first_name: str = Form(...), last_name: str
     
 #--- forgot password ---
 @app.get("/forgot-password", response_class=HTMLResponse)
-async def get_forgot_password(request: Request):
+async def get_forgot_password(request: Request, current_user= Depends(get_current_user)):
+    if current_user:
+        return RedirectResponse(url="/home?msg=You are already logged in", status_code=303)
     return render_templates("forgot_password.html", request)
 
 
@@ -272,6 +276,13 @@ async def forgot_password(request: Request, option: str = Form(...), identifier:
         return templates.TemplateResponse("forgot_password.html", {"request": request, "error": "Failed to send OTP email"})
 
     return templates.TemplateResponse("verify_otp.html", {"request": request, "option": option, "identifier": identifier})
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def get_reset_password(request: Request, current_user= Depends(get_current_user)):
+    if current_user:
+        return RedirectResponse(url="/home?msg=You are already logged in", status_code=303)
+    # If accessed directly, redirect to forgot-password
+    return RedirectResponse(url="/forgot-password?msg=Please verify first", status_code=303)
 
 @app.post("/reset-password")
 async def reset_password(request: Request, option: str = Form(...), identifier: str = Form(...), new_password: str = Form(...), confirm_password: str = Form(...)):

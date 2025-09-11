@@ -251,7 +251,7 @@
     <nav>
         <a class="logo"href="/home"><i class="fas fa-graduation-cap"></i> UserManager API</a>
         <div class="nav-links">
-            {% if request.url.path == '/login' or request.url.path == '/signup' %}
+            {% if request.url.path == '/login' or request.url.path == '/signup' or request.url.path == '/' %}
                 <a href="/"><i class="fas fa-sign-in-alt"></i> Login</a>
                 <a href="/signup"><i class="fas fa-user-plus"></i> Sign Up</a>
             {% else %}
