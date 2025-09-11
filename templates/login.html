@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% include "messages.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
 <div class="card">
@@ -8,12 +7,14 @@
         <!-- Username -->
         <label for="username">Username</label>
         <input type="text" id="username" name="username" 
-               placeholder="Enter your username" required>
+               placeholder="Enter your username" minlength="5" maxlength="15" pattern="^[a-zA-Z0-9_]+$"
+               title="Username can only contain letters, numbers, and underscores." required>
 
         <!-- Password -->
         <label for="password">Password</label>
         <input type="password" id="password" name="password" 
-               placeholder="Enter your password" required>
+               placeholder="Enter your password" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$"
+               title="Password must be 6-20 characters, include letters and numbers." required>
 
         <!-- Login button -->
         <button type="submit" class="btn btn-primary">Login</button>

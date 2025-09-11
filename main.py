@@ -150,10 +150,9 @@ async def get_update_form(request: Request, id: int, current_user= Depends(get_c
 
 # --- Handle Update Submission ---
 @app.post("/update/{id}")
-async def post_update(request: Request,id: int,first_name: str = Form(...),last_name: str = Form(...),
-                        username: str = Form(...), email: str = Form(...), mobile: str = Form(...),
-                        password: str = Form(None), security_question: str = Form(None), security_answer: str = Form(None), 
-                        current_user= Depends(get_current_user)):
+async def post_update(request: Request,id: int,first_name: str = Form(...),last_name: str = Form(...),username: str = Form(...), 
+                      email: str = Form(...), mobile: str = Form(...),password: str = Form(None), security_question: str = Form(None), 
+                      security_answer: str = Form(None), current_user= Depends(get_current_user)):
     
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
