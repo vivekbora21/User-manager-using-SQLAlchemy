@@ -13,8 +13,8 @@ from validation import validate_name, validate_password, validate_mobile, valida
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
 db = CRUD()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,7 +30,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def verify_password(plain_password, hashed_password):
-    if hashed_password.startswith("$2b$") or hashed_password.startswith("$2a$"):
+    if hashed_password.startswith("$2b$"):
         return pwd_context.verify(plain_password, hashed_password)
     else:
         return plain_password == hashed_password
@@ -94,8 +94,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
         return templates.TemplateResponse("login.html",{"request": request, "error": "Invalid username or password!"})
     access_token = create_access_token(data={"sub": user.username})
     response =  RedirectResponse("/home?msg= User login successful",status_code=303)
-    response.set_cookie(key="access_token", value=access_token, httponly=True,
-                        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                         expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     return response
 
@@ -132,13 +131,13 @@ async def get_users(request: Request, current_user= Depends(get_current_user)):
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
     
 #--- delete User ---
-@app.delete("/delete/{id}")
+@app.get("/delete/{id}")
 async def delete_user(id: int, current_user=Depends(get_current_user)):
     if current_user is None:
         return RedirectResponse(url="/?msg=You need to login first", status_code=303)
     try:
         db.delete(id)
-        return {"msg": "User deleted successfully"}
+        return RedirectResponse(url="/home?msg=User deleted successfully", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
 
